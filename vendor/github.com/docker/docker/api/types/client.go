@@ -15,6 +15,10 @@ type CheckpointCreateOptions struct {
 	CheckpointID  string
 	CheckpointDir string
 	Exit          bool
+	OpenTcp       bool
+	UnixSockets   bool
+	Terminal      bool
+	FileLocks     bool
 }
 
 // CheckpointListOptions holds parameters to list checkpoints for a container
