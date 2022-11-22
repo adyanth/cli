@@ -15,6 +15,8 @@ type createOptions struct {
 	container      string
 	checkpoint     string
 	checkpointDir  string
+	parentPath     string
+	criuPageServer string
 	leaveRunning   bool
 	tcpEstablished bool
 	unixSockets    bool
@@ -38,6 +40,8 @@ func newCreateCommand(dockerCli command.Cli) *cobra.Command {
 	}
 
 	flags := cmd.Flags()
+	flags.StringVarP(&opts.parentPath, "parent-path", "", "", "Use a parent path for iterative checkpoint migration storage directory")
+	flags.StringVarP(&opts.criuPageServer, "page-server", "", "", "Page server address for sending the memory pages")
 	flags.BoolVar(&opts.leaveRunning, "leave-running", false, "Leave the container running after checkpoint")
 	flags.BoolVar(&opts.tcpEstablished, "tcp-established", false, "Dump open TCP sockets in the checkpoint")
 	flags.BoolVar(&opts.unixSockets, "ext-unix-sk", false, "Dump Unix sockets in the checkpoint")
@@ -52,13 +56,15 @@ func runCreate(dockerCli command.Cli, opts createOptions) error {
 	client := dockerCli.Client()
 
 	checkpointOpts := types.CheckpointCreateOptions{
-		CheckpointID:  opts.checkpoint,
-		CheckpointDir: opts.checkpointDir,
-		Exit:          !opts.leaveRunning,
-		OpenTcp:       opts.tcpEstablished,
-		UnixSockets:   opts.unixSockets,
-		Terminal:      opts.terminal,
-		FileLocks:     opts.fileLocks,
+		CheckpointID:   opts.checkpoint,
+		CheckpointDir:  opts.checkpointDir,
+		Exit:           !opts.leaveRunning,
+		OpenTcp:        opts.tcpEstablished,
+		UnixSockets:    opts.unixSockets,
+		Terminal:       opts.terminal,
+		FileLocks:      opts.fileLocks,
+		ParentPath:     opts.parentPath,
+		CriuPageServer: opts.criuPageServer,
 	}
 
 	err := client.CheckpointCreate(context.Background(), opts.container, checkpointOpts)

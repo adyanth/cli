@@ -12,13 +12,15 @@ import (
 
 // CheckpointCreateOptions holds parameters to create a checkpoint from a container
 type CheckpointCreateOptions struct {
-	CheckpointID  string
-	CheckpointDir string
-	Exit          bool
-	OpenTcp       bool
-	UnixSockets   bool
-	Terminal      bool
-	FileLocks     bool
+	CheckpointID   string
+	CheckpointDir  string
+	ParentPath     string
+	CriuPageServer string
+	Exit           bool
+	OpenTcp        bool
+	UnixSockets    bool
+	Terminal       bool
+	FileLocks      bool
 }
 
 // CheckpointListOptions holds parameters to list checkpoints for a container
