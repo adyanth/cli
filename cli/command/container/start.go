@@ -2,6 +2,7 @@ package container
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -23,8 +24,10 @@ type StartOptions struct {
 	DetachKeys    string
 	Checkpoint    string
 	CheckpointDir string
-
-	Containers []string
+	OpenTcp       bool
+	Terminal      bool
+	FileLocks     bool
+	Containers    []string
 }
 
 // NewStartOptions creates a new StartOptions
@@ -63,6 +66,15 @@ func NewStartCommand(dockerCli command.Cli) *cobra.Command {
 	flags.StringVar(&opts.CheckpointDir, "checkpoint-dir", "", "Use a custom checkpoint storage directory")
 	flags.SetAnnotation("checkpoint-dir", "experimental", nil)
 	flags.SetAnnotation("checkpoint-dir", "ostype", []string{"linux"})
+	flags.BoolVar(&opts.OpenTcp, "open-tcp", false, "CRIU Open TCP restore")
+	flags.SetAnnotation("open-tcp", "experimental", nil)
+	flags.SetAnnotation("open-tcp", "ostype", []string{"linux"})
+	flags.BoolVar(&opts.Terminal, "terminal", false, "CRIU Terminal restore")
+	flags.SetAnnotation("terminal", "experimental", nil)
+	flags.SetAnnotation("terminal", "ostype", []string{"linux"})
+	flags.BoolVar(&opts.FileLocks, "file-locks", false, "CRIU File Locks restore")
+	flags.SetAnnotation("file-locks", "experimental", nil)
+	flags.SetAnnotation("file-locks", "ostype", []string{"linux"})
 	return cmd
 }
 
@@ -181,9 +193,23 @@ func RunStart(dockerCli command.Cli, opts *StartOptions) error {
 			return errors.New("you cannot restore multiple containers at once")
 		}
 		container := opts.Containers[0]
+		type tunnelArgs struct {
+			CheckpointDir string
+			OpenTcp       bool
+			Terminal      bool
+			FileLocks     bool
+		}
+
+		toSend, _ := json.Marshal(tunnelArgs{
+			CheckpointDir: opts.CheckpointDir,
+			OpenTcp:       opts.OpenTcp,
+			Terminal:      opts.Terminal,
+			FileLocks:     opts.FileLocks,
+		})
+
 		startOptions := types.ContainerStartOptions{
 			CheckpointID:  opts.Checkpoint,
-			CheckpointDir: opts.CheckpointDir,
+			CheckpointDir: string(toSend),
 		}
 		return dockerCli.Client().ContainerStart(ctx, container, startOptions)
 
